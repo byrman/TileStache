@@ -393,14 +393,14 @@ class Layer:
             try:
                 lockCoord = None
 
-                if self.write_cache:
+                if self.write_cache and not self.isSandwichLayer():
                     # this is the coordinate that actually gets locked.
                     lockCoord = self.metatile.firstCoord(coord)
                     
                     # We may need to write a new tile, so acquire a lock.
                     cache.lock(self, lockCoord, format)
                 
-                if not ignore_cached:
+                if not ignore_cached and not self.isSandwichLayer():
                     # There's a chance that some other process has
                     # written the tile while the lock was being acquired.
                     body = cache.read(self, coord, format)
@@ -655,6 +655,10 @@ class Layer:
 
         if palette256 is not None:
             self.palette256 = bool(palette256)
+
+    def isSandwichLayer(self):
+        return hasattr(self.provider, 'stack')
+
 
 class KnownUnknown(Exception):
     """ There are known unknowns. That is to say, there are things that we now know we don't know.
