@@ -90,6 +90,7 @@ class ImageProvider:
         self.layer = layer
         self.mapnik = None
 
+        # Maintain compatiblity between old and new Mapnik FontEngine API
         try:
             engine = mapnik.FontEngine.instance()
         except AttributeError:
@@ -286,7 +287,10 @@ class GridProvider:
 
                     for (index, fields) in self.layers:
                         datasource = self.mapnik.layers[index].datasource
-                        fields = (type(fields) is list) and map(str, fields) or datasource.fields()
+                        if isinstance(fields, list):
+                            fields = [str(f) for f in fields]
+                        else:
+                            fields = datasource.fields()
                         grid = mapnik.Grid(width, height)
                         mapnik.render_layer(self.mapnik, grid, layer=index, fields=fields)
                         grid = grid.encode('utf', resolution=self.scale, features=True)
